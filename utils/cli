@@ -1,0 +1,63 @@
+#!/bin/bash
+
+set -o nounset                              # Treat unset variables as an error
+
+SCRIPT_NAME=`basename "$0"`
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+DIST=${DIST:-dist}
+
+source $DIR/functions
+
+if [ ${1#-} = $1 ]; then
+  CMD=$1
+  shift
+fi
+
+# getopts for a short help option and long region, target and env option
+optspec=":h-:"
+while getopts "$optspec" optchar; do
+    case "${optchar}" in
+        -)
+            case "${OPTARG}" in
+              source=*)
+                  SOURCE=${OPTARG#*=}
+                  opt=${OPTARG%=$SOURCE}
+                  ;;
+
+              target=*)
+                  TARGET=${OPTARG#*=}
+                  opt=${OPTARG%=$TARGET}
+                  ;;
+              env=*)
+                  ENV=${OPTARG#*=}
+                  opt=${OPTARG%=$ENV}
+                  ;;
+              *)
+              echo "Unknown option --${OPTARG}" >&2
+              usage; exit 1
+              ;;
+            esac;;
+        h )  usage; exit 0                                ;;
+        *)
+            if [ "$OPTERR" != 1 ] || [ "${optspec:0:1}" = ":" ]; then
+                echo "Unknown option --${OPTARG}" >&2
+                usage; exit 1
+            fi
+            ;;
+    esac
+done
+
+[[ $CMD == "build" ]] && {
+
+  echo "Cleaning up $DIST..."
+  run "rm -rf $DIST"
+
+  echo "Cloning $SOURCE ..."
+  run "git clone --depth=1 -q --branch $TARGET $SOURCE $DIST"
+
+  echo "Building $TARGET ..."
+  run "docker build --compress -t confd-dist:$ENV-$TARGET ."
+
+  exit;
+} || { exit; }

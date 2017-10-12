@@ -1,0 +1,37 @@
+#!/bin/bash
+
+#---  FUNCTION  -------------------------------------------------------------------------------------------------------
+#         NAME:  run
+#  DESCRIPTION:  Executes terraform command.
+#----------------------------------------------------------------------------------------------------------------------
+function run {
+    $@
+    local status=$?
+    if [ $status -ne 0 ]; then
+        echo "error with $1" >&2
+    fi
+    return $status
+}
+
+#---  FUNCTION  -------------------------------------------------------------------------------------------------------
+#         NAME:  usage
+#  DESCRIPTION:  Display usage information.
+#----------------------------------------------------------------------------------------------------------------------
+function usage {
+    cat << EOT
+
+  Usage :  ${SCRIPT_NAME} <command> [options]
+
+  Commands:
+    - build                Checkouts the source and builds the config docker
+
+  Examples:
+    - ${SCRIPT_NAME} build --env testing --source git+ssh://github.com/axelspringer/your_config --checkout tag/1.0.0
+
+  Options:
+    -h        Display this message
+    --env     Environment to target
+    --source  Git Source to clone
+    --target  Branch, or Tag to target
+EOT
+}   # ----------  end of function usage  ----------
